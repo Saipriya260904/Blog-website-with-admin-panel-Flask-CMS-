@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <article class="mb-5">
+            <h1 class="mb-3">{{ post.title }}</h1>
+            <div class="text-muted small mb-4">
+                <strong>By {{ post.author.username }}</strong> 
+                on {{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                {% if post.updated_at != post.created_at %}
+                    | Updated {{ post.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                {% endif %}
+            </div>
+            
+            {% if post.categories %}
+                <div class="mb-4">
+                    {% for category in post.categories %}
+                        <a href="{{ url_for('blog.category', slug=category.slug) }}" class="badge bg-secondary text-decoration-none">
+                            {{ category.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="card-body text-content">
+                {{ post.content | safe }}
+            </div>
+        </article>
+
+        <hr class="my-5">
+
+        <section class="comments-section">
+            <h3 class="mb-4">Comments ({{ comments.total }})</h3>
+
+            {% if current_user.is_authenticated %}
+                <div class="card mb-5 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Add a Comment</h5>
+                        <form method="POST" action="{{ url_for('blog.add_comment', slug=post.slug) }}">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.content(class="form-control", rows="4", placeholder="Your comment...") }}
+                                {% if form.content.errors %}
+                                    <small class="text-danger d-block mt-1">
+                                        {{ form.content.errors[0] }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info mb-5">
+                    <a href="{{ url_for('auth.login') }}">Log in</a> to post a comment.
+                </div>
+            {% endif %}
+
+            {% if comments.items %}
+                {% for comment in comments.items %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                <strong>{{ comment.author.username }}</strong>
+                                on {{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </h6>
+                            <p class="card-text">{{ comment.content }}</p>
+                            {% if current_user.is_authenticated and current_user.is_admin() %}
+                                <form method="POST" action="{{ url_for('admin.delete_comment', comment_id=comment.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this comment?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No comments yet. Be the first to comment!</p>
+            {% endif %}
+
+            {% if comments.pages > 1 %}
+                <nav aria-label="Comments pagination">
+                    <ul class="pagination mt-4">
+                        {% if comments.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('blog.post', slug=post.slug, page=comments.prev_num) }}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                        {% endif %}
+
+                        {% for page_num in comments.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num == comments.page %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('blog.post', slug=post.slug, page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if comments.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('blog.post', slug=post.slug, page=comments.next_num) }}">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">About the Author</h5>
+                <p class="card-text">
+                    <strong>{{ post.author.username }}</strong><br>
+                    <small class="text-muted">{{ post.author.email }}</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

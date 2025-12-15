@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Blog{% endblock %}
+
+{% block content %}
+<div class="admin-header mb-5">
+    <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Users</h6>
+                    <h2 class="card-text">{{ total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Posts</h6>
+                    <h2 class="card-text">{{ total_posts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Comments</h6>
+                    <h2 class="card-text">{{ total_comments }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Categories</h6>
+                    <h2 class="card-text">{{ total_categories }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('admin.create_post') }}" class="btn btn-primary btn-block w-100 mb-2">Create New Post</a>
+                <a href="{{ url_for('admin.manage_posts') }}" class="btn btn-outline-primary btn-block w-100 mb-2">Manage Posts</a>
+                <a href="{{ url_for('admin.create_category') }}" class="btn btn-outline-primary btn-block w-100 mb-2">Create Category</a>
+                <a href="{{ url_for('admin.manage_categories') }}" class="btn btn-outline-primary btn-block w-100 mb-2">Manage Categories</a>
+                <a href="{{ url_for('admin.manage_comments') }}" class="btn btn-outline-primary btn-block w-100 mb-2">Manage Comments</a>
+                <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-primary btn-block w-100">Manage Users</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Recent Posts</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_posts %}
+                    <ul class="list-group list-group-flush">
+                        {% for post in recent_posts %}
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-0">{{ post.title }}</h6>
+                                    <small class="text-muted">{{ post.created_at.strftime('%B %d, %Y') }}</small>
+                                </div>
+                                <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No posts yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Recent Comments</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_comments %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Author</th>
+                            <th>Post</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comment in recent_comments %}
+                            <tr>
+                                <td>{{ comment.author.username }}</td>
+                                <td><a href="{{ url_for('blog.post', slug=comment.post.slug) }}">{{ comment.post.title }}</a></td>
+                                <td>{{ comment.content[:50] }}...</td>
+                                <td>{{ comment.created_at.strftime('%B %d, %Y') }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('admin.delete_comment', comment_id=comment.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this comment?')">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No comments yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
